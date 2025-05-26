@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  OrdersFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: app.lambda_handler
+      Runtime: python3.11
+      CodeUri: .
+      Environment:
+        Variables:
+          POWERTOOLS_SERVICE_NAME: orders
+      Events:
+        OrderApi:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: Orders
+        - Statement:
+            Effect: Allow
+            Action:
+              - appconfig:GetConfiguration
+            Resource: "*"
+
+  OrdersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Orders
+      AttributeDefinitions:
+        - AttributeName: order_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: order_id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
